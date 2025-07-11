@@ -30,3 +30,38 @@ You can install the required libraries using `pip`:
 
 ```bash
 pip install pandas pyarrow numpy
+
+## Handling timestamp when ingesting to Splunk
+
+To have Splunk extract the timestamp from the JSON field "event_timestamp" when uploading data via Add Data, you'll need to configure Splunk to recognize and parse this custom timestamp format, as Splunk does not natively extract timestamps from nested JSON fields in this structure by default.
+
+Key Points
+Your timestamp is in epoch seconds (e.g., 1751871976), nested inside an object, not as a top-level field.
+
+By default, Splunk expects timestamps in common formats or as top-level fields, so custom configuration is needed.
+
+Solution Steps
+
+Configure props.conf for Custom Timestamp Extraction
+You need to tell Splunk how to find and interpret your timestamp. This is done via the props.conf file:
+
+TIME_PREFIX: Regex pattern before the timestamp value.
+
+TIME_FORMAT: Format of the timestamp (epoch seconds = %s).
+
+MAX_TIMESTAMP_LOOKAHEAD: How many characters ahead Splunk reads to find the timestamp.
+
+Example configuration:
+
+text
+[your_sourcetype]
+TIME_PREFIX = "event_timestamp":\{"seconds":
+TIME_FORMAT = %s
+MAX_TIMESTAMP_LOOKAHEAD = 20
+
+TIME_PREFIX tells Splunk to look for the string preceding the epoch seconds value.
+
+TIME_FORMAT = %s tells Splunk to interpret the value as epoch seconds (UNIX time).
+
+Adjust MAX_TIMESTAMP_LOOKAHEAD if your JSON structure is more complex or the value appears further in the line.
+
